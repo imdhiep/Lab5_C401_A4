@@ -21,6 +21,17 @@ Feasibility (Khả thi): Sử dụng LLM (GPT-4o/Claude) kết hợp RAG trên b
 
 Learning Signal (Tín hiệu học tập): Tỉ lệ bệnh nhân nhấn "Đặt lịch" sau khi được AI tư vấn; Phản hồi của bác sĩ về mức độ chính xác của tóm tắt triệu chứng mà AI gửi tới.
 
+Augmentation (Hỗ trợ người dùng) — TRỌNG TÂM
+Vấn đề: Bệnh nhân mơ hồ về chuyên môn y khoa.
+
+Cách giải quyết: AI không tự ý "chốt" bệnh hay bắt bệnh nhân đi khám. Nó đóng vai trò Copilot để:
+
+Phân tích triệu chứng và gợi ý (Suggest) khoa phù hợp.
+
+Cung cấp thông tin để bệnh nhân tự ra quyết định chọn bác sĩ dựa trên độ tương thích (Match Score).
+
+Mục tiêu: Tăng năng lực hiểu biết cho bệnh nhân (Clarity).
+
 ## User Stories (4 paths)
 Happy Path (Thành công): Bệnh nhân nhập "đau bụng, buồn nôn" -> AI xác định Khoa Tiêu hóa -> AI check thấy bác sĩ A đang trống lịch -> Bệnh nhân đặt lịch thành công trong 1 phút.
 
@@ -78,9 +89,9 @@ Process: 1. Phân loại triệu chứng.
 Output: Tên Khoa + Danh sách bác sĩ kèm trạng thái trống lịch + Link đặt lịch nhanh.
 
 ## Phân công 
-Quân: 
-Chung:
-Dương:
-Đức Anh:
-Đạt:
-Hiệp: 
+Quân:  Problem Statement, Mini AI Spec
+Chung: Canvas
+Dương: Evalution Metric
+Đức Anh: User Story
+Đạt: Top 3 Failing Models
+Hiệp: ROI 3 Kịch Bản
