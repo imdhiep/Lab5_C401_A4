@@ -1507,6 +1507,73 @@ def render_right_panel(facilities: list[dict[str, Any]], selected_facility: dict
         unsafe_allow_html=True,
     )
 
+    if st.button("Hồ sơ người dùng", key="toggle_user_profiles", use_container_width=True):
+        st.session_state.profile_panel_open = not st.session_state.get("profile_panel_open", False)
+
+    if st.session_state.get("profile_panel_open", False):
+        render_user_profile_panel()
+
+
+def render_user_profile_panel() -> None:
+    profiles = st.session_state.get("customer_profiles", [])
+    options = ["Thêm hồ sơ mới"] + [f"{item['full_name']} - {item['phone']}" for item in profiles]
+    selected_index = st.selectbox(
+        "Hồ sơ khách hàng",
+        options=range(len(options)),
+        format_func=lambda idx: options[idx],
+        key="profile_selected_index",
+    )
+
+    selected_profile = profiles[selected_index - 1] if selected_index > 0 else None
+    default_name = selected_profile["full_name"] if selected_profile else ""
+    default_gender = selected_profile["gender"] if selected_profile else "Nam"
+    default_phone = selected_profile["phone"] if selected_profile else ""
+
+    st.markdown("### Thông tin khách hàng")
+    with st.form("customer_profile_form", clear_on_submit=False):
+        full_name = st.text_input("Họ và tên*", value=default_name, placeholder="Họ và tên")
+        gender = st.radio("Giới tính*", ["Nam", "Nữ"], index=0 if default_gender == "Nam" else 1, horizontal=True)
+        phone = st.text_input("Số điện thoại*", value=default_phone, placeholder="Số điện thoại")
+        left_col, right_col = st.columns(2)
+        with left_col:
+            save_clicked = st.form_submit_button(
+                "Cập nhật hồ sơ" if selected_profile else "Thêm hồ sơ",
+                use_container_width=True,
+            )
+        with right_col:
+            reset_clicked = st.form_submit_button("Làm mới", use_container_width=True)
+
+    if reset_clicked:
+        st.session_state.profile_selected_index = 0
+        st.rerun()
+
+    if save_clicked:
+        full_name = full_name.strip()
+        phone = phone.strip()
+        if not full_name or not phone:
+            st.error("Vui lòng nhập đầy đủ họ và tên và số điện thoại.")
+        else:
+            payload = {
+                "full_name": full_name,
+                "gender": gender,
+                "phone": phone,
+            }
+            if selected_profile:
+                profiles[selected_index - 1] = payload
+                st.success("Đã cập nhật hồ sơ khách hàng.")
+            else:
+                profiles.append(payload)
+                st.session_state.profile_selected_index = len(profiles)
+                st.success("Đã thêm hồ sơ khách hàng.")
+            st.session_state.customer_profiles = profiles
+
+    if selected_profile and st.button("Xóa hồ sơ", key="delete_customer_profile", use_container_width=True):
+        del profiles[selected_index - 1]
+        st.session_state.customer_profiles = profiles
+        st.session_state.profile_selected_index = 0
+        st.success("Đã xóa hồ sơ khách hàng.")
+        st.rerun()
+
 
 def initial_messages() -> list[dict[str, Any]]:
     return [
@@ -1524,6 +1591,12 @@ def initial_messages() -> list[dict[str, Any]]:
 def ensure_session() -> None:
     if "chat_messages" not in st.session_state:
         st.session_state.chat_messages = initial_messages()
+    if "customer_profiles" not in st.session_state:
+        st.session_state.customer_profiles = []
+    if "profile_panel_open" not in st.session_state:
+        st.session_state.profile_panel_open = False
+    if "profile_selected_index" not in st.session_state:
+        st.session_state.profile_selected_index = 0
 
 
 def run_legacy() -> None:
