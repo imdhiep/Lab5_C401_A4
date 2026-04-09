@@ -4,7 +4,7 @@
 Prompt engineer + evaluator. Phụ trách research, xây dựng logic hỏi tiếp khi thông tin chưa đủ và generate testcase đánh giá chất lượng đầu ra.
 
 ## 2. Đóng góp cụ thể
-- Xây dựng bộ test case để đánh giá chất lượng đầu ra của hệ thống, bao gồm happy path, low-confidence path, correction path, và safety cases
+- Xây dựng bộ test case để đánh giá chất lượng đầu ra của hệ thống, bao gồm happy path, low-confidence path, correction path, và safety cases (docs/vinmec_hackathon_testcases.md)
 - Đề xuất cách chia output thành các phần rõ ràng hơn: **mức độ ưu tiên**, **khoa đề xuất**, **lý do**, **bước tiếp theo**
 - Đánh giá kết quả prompt trên nhiều input khác nhau để xem khi nào model trả lời tốt, khi nào dễ hallucinate hoặc trả lời quá tự tin
 

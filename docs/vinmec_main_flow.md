@@ -155,9 +155,6 @@ flowchart LR
     T --> R[Risk Check]
     R -->|High Risk| E[Escalate]
     R -->|Normal Risk| D[Department Recommendation]
-    D --> J[Journey Guidance]
-    J --> X[Explanation]
-    X --> F[Follow-up]
 ```
 
 ---
@@ -169,26 +166,6 @@ flowchart LR
 2. AI hỏi thêm nếu thông tin chưa đủ  
 3. AI kiểm tra dấu hiệu nguy hiểm  
 4. Nếu nguy hiểm → khuyến nghị cấp cứu / khám ngay  
-5. Nếu không nguy hiểm → gợi ý khoa phù hợp  
-6. AI tạo hành trình khám từng bước  
-7. AI giải thích xét nghiệm / kết quả bằng ngôn ngữ đơn giản  
-8. AI nhắc thuốc, tái khám và follow-up sau khám  
+5. Nếu không nguy hiểm → gợi ý khoa phù hợp 
 
 ---
-
-# 7. Câu mô tả flow ngắn để pitch
-
-> AI Patient Copilot guides patients from symptom intake to recovery follow-up, while always prioritizing safety escalation over diagnosis.
-
----
-
-# 8. Gợi ý cách dùng trong bài thi
-
-Bạn có thể dùng flow này ở 3 nơi:
-- Trang mô tả solution overview
-- Trang demo architecture / user journey
-- Trang safety and guardrails
-
-Nếu chỉ chọn 1 flow để đưa lên slide, nên dùng:
-- **Flow tổng thể end-to-end**
-- hoặc **Flow safety ưu tiên cao**
