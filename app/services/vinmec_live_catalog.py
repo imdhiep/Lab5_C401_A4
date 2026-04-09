@@ -40,7 +40,7 @@ def save_catalog(payload: dict[str, Any]) -> None:
 
 def build_fallback_catalog_from_local_assets() -> dict[str, Any]:
     html = LOCAL_HTML_PATH.read_text(encoding="utf-8", errors="ignore")
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(html, "html.parser")
 
     facilities = []
     hospital_select = soup.select_one("#hospital")
@@ -83,7 +83,7 @@ def crawl_live_catalog(days_ahead: int = 3, timeout: int = 20) -> dict[str, Any]
 
     booking_page = session.get(BOOKING_URL, timeout=timeout)
     booking_page.raise_for_status()
-    soup = BeautifulSoup(booking_page.text, "lxml")
+    soup = BeautifulSoup(booking_page.text, "html.parser")
 
     facilities = _fetch_facilities(session, timeout)
     specialties = []
