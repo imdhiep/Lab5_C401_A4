@@ -76,7 +76,7 @@ def crawl_catalog(
         if monitor:
             monitor.increment_requests()
         booking_page.raise_for_status()
-        soup = BeautifulSoup(booking_page.text, "lxml")
+        soup = BeautifulSoup(booking_page.text, "html.parser")
 
         if monitor:
             monitor.update_stage("Lấy danh sách cơ sở")
