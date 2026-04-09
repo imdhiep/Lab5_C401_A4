@@ -136,6 +136,73 @@ def build_triage_user_message(chat_messages: list[dict[str, Any]]) -> str:
     return "\n".join(reversed(collected))
 
 
+def is_booking_confirmation_intent(normalized: str) -> bool:
+    intent_keywords = [
+        "chot",
+        "dat lich",
+        "dat bac si",
+        "chon bac si",
+        "lay bac si",
+        "giu lich",
+        "xac nhan lich",
+        "chot lich",
+    ]
+    return any(keyword in normalized for keyword in intent_keywords)
+
+
+def find_last_recommendation_message(chat_messages: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for message in reversed(chat_messages):
+        if message.get("role") == "assistant" and message.get("kind") == "analysis" and message.get("status") == "recommend":
+            return message
+    return None
+
+
+def match_doctor_from_message(user_message: str, recommendation_message: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not recommendation_message:
+        return None
+
+    normalized_user = normalize(user_message)
+    doctors = recommendation_message.get("doctors", [])
+    for doctor in doctors:
+        heading = str(doctor.get("heading", "")).strip()
+        normalized_heading = normalize(heading)
+        if normalized_heading and normalized_heading in normalized_user:
+            return doctor
+
+        for token in normalized_heading.replace("bac si", "").split():
+            if len(token) >= 4 and token in normalized_user:
+                return doctor
+    return None
+
+
+def build_booking_success_message(
+    doctor: dict[str, Any],
+    recommendation_message: dict[str, Any],
+    selected_facility: dict[str, Any],
+) -> dict[str, Any]:
+    first_slot = doctor.get("first_slot")
+    slot_text = format_slot(first_slot)
+    fee = (doctor.get("price") or {}).get("local")
+    fee_text = f"{fee:,} VND".replace(",", ".") if fee else "Liên hệ xác nhận"
+    specialty_title = recommendation_message.get("department_title", "chuyên khoa phù hợp")
+    return {
+        "role": "assistant",
+        "kind": "analysis",
+        "status": "booking_success",
+        "assistant_message": (
+            f"Đã chốt lịch khám thành công với {format_doctor_label(doctor)} tại {selected_facility['title']}."
+        ),
+        "department_title": specialty_title,
+        "doctor_name": format_doctor_label(doctor),
+        "facility_title": selected_facility["title"],
+        "slot_text": slot_text,
+        "fee_text": fee_text,
+        "reasoning": (
+            f"Lịch gần nhất của bác sĩ là {slot_text}. Bạn có thể dùng lựa chọn này như bước chốt lịch trong demo đặt khám."
+        ),
+    }
+
+
 def inject_styles() -> None:
     css_chunks: list[str] = []
     for name in ["reset.css", "css-shared.css", "non-critical-pc.css", "booking.css"]:
@@ -491,18 +558,30 @@ def run() -> None:
         selected_facility_title = st.session_state.get("selected_facility_title", chosen_title)
         selected_facility = facility_map[selected_facility_title]
         specialties = catalog_repository.get_specialties_by_facility(selected_facility["id"])
+        normalized_prompt = normalize(latest_prompt)
+        recommendation_message = find_last_recommendation_message(st.session_state.chat_messages[:-1])
+        selected_doctor = None
+        if is_booking_confirmation_intent(normalized_prompt):
+            selected_doctor = match_doctor_from_message(latest_prompt, recommendation_message)
         with left_col:
             with st.chat_message("assistant"):
                 with st.spinner("AI đang phân tích triệu chứng và đối chiếu chuyên khoa phù hợp..."):
-                    triage = ask_triage_agent(
-                        token=token,
-                        base_url=base_url,
-                        model_name=model_name,
-                        user_message=triage_user_message,
-                        selected_facility=selected_facility,
-                        specialties=specialties,
-                    )
-                    assistant_message = build_assistant_message(triage, selected_facility, specialties)
+                    if selected_doctor and recommendation_message:
+                        assistant_message = build_booking_success_message(
+                            selected_doctor,
+                            recommendation_message,
+                            selected_facility,
+                        )
+                    else:
+                        triage = ask_triage_agent(
+                            token=token,
+                            base_url=base_url,
+                            model_name=model_name,
+                            user_message=triage_user_message,
+                            selected_facility=selected_facility,
+                            specialties=specialties,
+                        )
+                        assistant_message = build_assistant_message(triage, selected_facility, specialties)
                     render_analysis_payload(assistant_message)
         st.session_state.chat_messages.append(assistant_message)
         st.rerun()
@@ -1333,6 +1412,24 @@ def render_analysis_payload(message: dict[str, Any]) -> None:
         )
         if message.get("reasoning"):
             st.caption(message["reasoning"])
+    elif status == "booking_success":
+        st.markdown(
+            f"""
+            <div class="vm-analysis-card">
+              <div class="vm-pill-row">
+                <div class="vm-pill">Booking Success</div>
+                <div class="vm-pill">{message.get('facility_title', '')}</div>
+              </div>
+              <div class="vm-analysis-title">Đặt lịch thành công</div>
+              <div class="vm-analysis-text">{message['assistant_message']}</div>
+              <div class="vm-analysis-text">Bác sĩ đã chốt: <strong>{message.get('doctor_name', 'Đang cập nhật')}</strong></div>
+              <div class="vm-analysis-text">Slot dự kiến: <strong>{message.get('slot_text', 'Liên hệ xác nhận')}</strong></div>
+              <div class="vm-analysis-text">Phí khám dự kiến: <strong>{message.get('fee_text', 'Liên hệ xác nhận')}</strong></div>
+              <div class="vm-disclaimer">Đây là bước chốt lịch trong luồng demo đặt khám. Bạn vẫn nên xác nhận lại thông tin cá nhân và lịch hẹn khi cần.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     else:
         st.markdown(message["assistant_message"])
 
